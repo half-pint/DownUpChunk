@@ -1,10 +1,11 @@
 import os
 import sqlite3
 from flask import Flask, render_template, g, request, session, escape, redirect, flash, url_for, redirect
-from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash, secure_filename
 
 app=Flask(__name__)
 app.secret_key = 'br\xcb\xa2\x81\xa4\xf4\xda\xdd\xb3\xa0\x92\x11\xa5\xe6\xb7R}\x11zHP\x9b\xbbz'
+
 
 def make_dicts(cursor, row):
     return dict((cursor.description[idx][0], value)
@@ -67,9 +68,6 @@ def check_errors(username_field, password_field):
 def index():
 	return render_template('layout.html')
 
-@app.route('/user/<username>')
-def username():
-	return 'User %s' % username
 
 @app.route('/post/<int:post_id>')
 def post_id():	
@@ -78,7 +76,7 @@ def post_id():
 @app.route('/entries')
 def show_entries():
 	db = get_db()
-	cur = db.execute('select title,text from entries order by id desc')
+	cur = db.execute('select author,text from entries order by id desc')
 	entries = cur.fetchall()
 	return render_template('entries.html', entries=entries)
 
@@ -87,7 +85,7 @@ def add_entry():
 	if not session.get('logged_in'):
 		abort(401)
 	db = get_db()
-	db.execute('insert into entries (title, text) values (?,?)', [request.form['title'], request.form['text']])
+	db.execute('insert into entries (author, text) values (?,?)', [session['username'], request.form['text']])
 	db.commit()
 	flash('new entry was successfully posted!')
 	return redirect(url_for('show_entries'))
@@ -114,9 +112,11 @@ def login():
 
 @app.route('/logout')
 def logout():
-    session.pop('logged_in', None)
-    flash('You were logged out')
-    return redirect(url_for('show_entries'))
+	session.pop('logged_in', None)
+	flash('You were logged out')
+	session['logged_in']=False
+	session.clear()
+	return redirect(url_for('index'))
 
 @app.route("/register/", methods=['POST', 'GET'])
 def register():
@@ -132,8 +132,20 @@ def register():
 			else: 
 				pw_hash = generate_password_hash(password, method='pbkdf2:sha512')
 				query_insert('insert into users (username, password, email) values (?, ?, ?)', [username, pw_hash, email])
-				return 'Registered!'
+				return redirect(url_for('index'))
 	return render_template('register.html', error=error)
+
+@app.route('/user/<nickname>')
+def user(nickname):
+	user = query_db('select username from users where username=?', [nickname], one=True)
+	if user is None:
+		flash('User ' + nickname + ' not found.')
+		return redirect(url_for('index'))
+	posts = query_db('select text from entries where author=?',[user['username']])
+
+	return render_template('person.html', user = user, posts = posts)
+
+
 
 if __name__ == '__main__':
 	app.run(debug=True)

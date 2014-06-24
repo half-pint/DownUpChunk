@@ -1,18 +1,24 @@
 <!doctype html>
-<title>Flaskr</title>
+<title>DownUpChunk</title>
 <link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
 <div class=page>
-  <h1>Flaskr</h1>
-  <div class=metanav>
-  {% if not session.logged_in %}
-    <a href="{{ url_for('login') }}">log in</a>
-  {% else %}
-    <a href="{{ url_for('logout') }}">log out</a>
-    <a href="{{ url_for('show_entries') }}">Post</a>
-  {% endif %}
-  </div>
+  <h1>DownUpChunk</h1>
+
   {% for message in get_flashed_messages() %}
     <div class=flash>{{ message }}</div>
   {% endfor %}
+
+  <div class=metanav>
+  {% if not session.logged_in %}
+    <a href="{{ url_for('login') }}">Log in</a>
+	<a href="{{ url_for('register') }}">Register</a>
+  {% else %}
+    <a href="{{ url_for('logout') }}">Log out</a>
+    <a href="{{ url_for('show_entries') }}">Post</a>
+  {% endif %}
+  </div>
+
+
+
   {% block body %}{% endblock %}
 </div>

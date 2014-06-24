@@ -1,5 +1,12 @@
 {% extends "layout.html" %}
-<div class=metanav>
 
-<a href="{{ url_for('add') }}">Post</a>
+{% block body %}
+<h2>{{user.username}}</h2>
+<hr>
+{% for post in posts %}
+<p>
+  {{post.author}} says: <b>{{post.text}}</b>
+</p>
+{% endfor %}
+{% endblock %}
 
