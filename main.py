@@ -1,11 +1,38 @@
 import os
 import sqlite3
 from flask import Flask, render_template, g, request, session, escape, redirect, flash, url_for, redirect
-from werkzeug.security import generate_password_hash, check_password_hash, secure_filename
+from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
+import pillow
+
+
+UPLOAD_FOLDER = './static/uploads'
+ALLOWED_EXTENSIONS = set(['pdf', 'png', 'jpg', 'jpeg'])
 
 app=Flask(__name__)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.secret_key = 'br\xcb\xa2\x81\xa4\xf4\xda\xdd\xb3\xa0\x92\x11\xa5\xe6\xb7R}\x11zHP\x9b\xbbz'
 
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
+
+@app.route('/upload/', methods=['GET', 'POST'])
+def upload():
+	if request.method == 'POST':
+		file = request.files['file']
+		if file and allowed_file(file.filename):
+			filename = secure_filename(file.filename)
+			file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+			return redirect(url_for('uploaded_file', filename=filename))
+
+	return render_template('upload.html')
+
+@app.route('/uploaded_file')
+def uploaded_file(filename):
+	image = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+	Image.open(image).thumbnail(size).save("thumbnail_%s" % image)
+	return render_template('uploaded_file.html')
 
 def make_dicts(cursor, row):
     return dict((cursor.description[idx][0], value)

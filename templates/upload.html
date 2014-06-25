@@ -1,0 +1,12 @@
+{% extends "layout.html" %}
+{% block body %}
+  <h2>Upload Avatar</h2>
+  {% if error %}<p class=error><strong>Error:</strong> {{ error }}{% endif %}
+  <form  action="{{ url_for('upload') }}" method=post enctype="multipart/form-data">
+    <dl>
+      <dt>Avatar:
+      <dd><input type=file name=file>
+      <dd><input type=submit value=Upload>
+    </dl>
+  </form>
+{% endblock %}
